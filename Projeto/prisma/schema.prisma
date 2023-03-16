@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User{
+  id        String  @id @default(uuid())
+  name      String    
+  email     String  @unique
+  password  String 
+  CPF       String  @unique 
+  isAdmin   Boolean @default(false)
+  profiles  Profile[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Profile{
+  id        String  @id @default(uuid())
+  title     String  @unique
+  imageURL  String  
+  user      User    @relation(fields: [userId], references: [id])
+  userId    String  @map("user_id")
+  profileGames ProfileGame[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Game{
+  id                 String  @id @default(uuid())
+  title              String  @unique
+  coverImageURL      String
+  description        String
+  year               Int
+  imdbScore          Float?
+  trailerYouTubeUrl  String
+  gameplayYouTubeUrl String
+  genres             Genre[]   @relation("genre-games")  
+  profileGames       ProfileGame[]
+  
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model Genre{
+  id        String  @id @default(uuid())
+  name      String  @unique
+  games     Game[]  @relation("genre-games")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProfileGame{
+  id        String   @id @default(uuid())
+
+  profile   Profile  @relation(fields: [profileId], references: [id])
+  profileId String   @map("profile_id")
+
+  game      Game     @relation(fields: [gameId], references: [id])
+  gameId    String   @map("game_id")
+
+  favorite  Boolean  @default(false)
+  imdbScore Int
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([profileId, gameId])
+  @@map("profile_to_game")
+}
